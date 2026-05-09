@@ -1,70 +1,53 @@
-# Instructions for locked laptop
+# Next steps for locked laptop
 
-## Current goal
-Download `qwen2.5-coder-14b-instruct-q4_k_m.gguf` (~9 GB) onto the locked laptop using a Kaggle notebook as a relay (HuggingFace is blocked, Kaggle works).
-
-## Step 1 — Sign in to Kaggle
-- Open https://www.kaggle.com → Register (free, use Google sign-in is fastest).
-
-## Step 2 — Create a new notebook
-- Go to https://www.kaggle.com/code
-- Click **+ New Notebook**.
-
-## Step 3 — Enable internet in the notebook
-- Right sidebar → **Settings** → toggle **Internet on**.
-- Kaggle will require **one-time phone verification**. Do it.
-- Accelerator: **None** (CPU is fine, we're just downloading).
-
-## Step 4 — Paste this code in the first cell
-
-```python
-!pip install -q huggingface_hub
-from huggingface_hub import hf_hub_download
-import os
-
-path = hf_hub_download(
-    repo_id="Qwen/Qwen2.5-Coder-14B-Instruct-GGUF",
-    filename="qwen2.5-coder-14b-instruct-q4_k_m.gguf",
-    local_dir="/kaggle/working"
-)
-print("Saved to:", path)
-print("Size GB:", round(os.path.getsize(path) / 1e9, 2))
-```
-
-## Step 5 — Run
-- Click **Run All** (top).
-- Wait ~3–5 min. You should see `Saved to: /kaggle/working/qwen2.5-coder-14b-instruct-q4_k_m.gguf` and `Size GB: ~9`.
-
-## Step 6 — Commit the notebook (this makes the output file downloadable)
-- Top-right → **Save Version** → choose **Save & Run All (Commit)** → wait until it finishes (~5–10 min).
-
-## Step 7 — Download the file to the laptop
-- Once the version is committed, the right-side **Output** panel shows the .gguf.
-- Click it → **Download** button. Save to e.g. `C:\models\qwen2.5-coder-14b-instruct-q4_k_m.gguf`.
-
-## Step 8 — Run llama-server
-From the folder where you extracted llama.cpp + CUDA DLLs:
-
-```powershell
-.\llama-server.exe -m "C:\models\qwen2.5-coder-14b-instruct-q4_k_m.gguf" -c 32768 -ngl 99 -fa --host 127.0.0.1 --port 8080
-```
-
-Watch the startup log — you want to see `CUDA0: <your GPU>` and layers offloaded.
-Open http://localhost:8080 in browser to test the chat UI.
-
-## Step 9 — Roo Code in VS Code
-- Provider: **OpenAI Compatible**
-- Base URL: `http://localhost:8080/v1`
-- API Key: `sk-local`
-- Model ID: `qwen` (any string)
-- Context window: `32768`
+## What just happened
+Your Kaggle notebook ran but got `Temporary failure in name resolution` → the notebook **has no internet access**. Kaggle disables internet by default; turning it on requires a one-time phone verification.
 
 ---
 
-## If something fails
-Paste the **exact** error/output into `laptop.md`, commit + push. I'll write the next step here.
+## Fix A — Enable Internet on the Kaggle notebook (preferred)
 
-### Common failure fallbacks
-- **Phone verification not possible** → try repo `bartowski/Qwen2.5-Coder-14B-Instruct-GGUF` filename `Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf` in the snippet above (sometimes works without internet toggle if mirrored as a Kaggle dataset; otherwise we'll find a public Kaggle dataset that already has it).
-- **HF download fails inside Kaggle** → swap to: `repo_id="bartowski/Qwen2.5-Coder-14B-Instruct-GGUF"`, `filename="Qwen2.5-Coder-14B-Instruct-Q4_K_M.gguf"`.
-- **Output panel doesn't show the file** → you forgot to commit (Step 6). Outputs only persist after a committed version.
+1. In your open Kaggle notebook, look at the **right sidebar**.
+2. Find the **"Notebook options"** / **"Session options"** section (sometimes hidden under a `>` arrow — expand it).
+3. Find the **Internet** toggle. Turn it **ON**.
+4. Kaggle will pop up: *"Phone verification required"* → click **Verify phone**.
+   - Enter any phone number you have access to (personal mobile is fine — Kaggle just sends one SMS code).
+   - Enter the SMS code.
+5. Once verified, the Internet toggle turns ON. **Re-run the cell** (Run All).
+
+If phone verification is impossible for you, skip to **Fix B**.
+
+---
+
+## Fix B — Use a Kaggle Dataset that already contains the GGUF (no internet needed)
+
+Some users have already uploaded Qwen GGUFs as Kaggle Datasets. Datasets are pre-downloaded into the notebook's filesystem — no internet required.
+
+### Step 1 — Search Kaggle for the file
+Open these search URLs in your browser, see which one returns a real dataset with a `.gguf` file:
+
+- https://www.kaggle.com/datasets?search=qwen2.5+coder+gguf
+- https://www.kaggle.com/datasets?search=qwen+coder+14b+gguf
+- https://www.kaggle.com/datasets?search=qwen+coder+7b+gguf
+
+### Step 2 — Pick one and tell me
+Paste into `laptop.md`:
+- The dataset URL
+- The exact filename(s) shown (e.g. `qwen2.5-coder-14b-instruct-q4_k_m.gguf`, or 7B variants)
+
+### Step 3 — I'll give you the "Add Data" snippet
+Once you tell me the dataset slug, I'll write the next code cell that copies the file from `/kaggle/input/<dataset>/...` into your notebook output, which you can then download.
+
+---
+
+## Fix C — Run llama.cpp directly inside Kaggle (sanity check)
+
+If both A and B fail, we can skip the model download entirely and just confirm the laptop's llama.cpp setup works with a tiny model. Tell me and I'll write that path.
+
+---
+
+## Try Fix A first
+
+It's by far the easiest. The phone-verification SMS is one-time per Kaggle account and unlocks internet for all your future notebooks.
+
+When you're done (or stuck), paste the result into `laptop.md`, commit, push.
